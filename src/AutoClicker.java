@@ -1,12 +1,11 @@
-
-
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JButton;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,12 +14,10 @@ public class AutoClicker {
 
     Thread clickThread;
     boolean started = false;
-
-    double seconds = 1;
+    JTextField textField;
 
     public AutoClicker() {
         ui();
-        //autoclick();
     }
 
     private void ui() {
@@ -28,32 +25,37 @@ public class AutoClicker {
         JPanel panel = new JPanel();
         JButton button = new JButton("Start");
         JButton stop = new JButton("Stop");
-        JFormattedTextField textField = new JFormattedTextField("Enter a Num");
+        JTextField textField = new JTextField("",10);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent key) {
+                if(key.getID() == KeyEvent.KEY_PRESSED && key.getKeyCode()==KeyEvent.VK_F1) {
+                    if(!started) {
+                        try {
+                            start(Double.parseDouble(textField.getText()));
+                        } catch (NumberFormatException ex) {
+                            start(1);
+                        }
+                    } else
+                        stop();
+                }
+                return false;
+            }
+        });
         
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if(!started) {
-                    try {
-                        seconds = Double.parseDouble(textField.getText());
-                    } catch (NumberFormatException ex) {
-                        seconds = 1;
-                    }
-                    System.out.println(seconds);
-                    clickThread = new Thread(new Runnable() {
-                        public void run() {
-                            autoclick();
-                        }
-                    });
-                    started = true;
-                    clickThread.start();
+                try {
+                    start(Double.parseDouble(textField.getText()));
+                } catch (NumberFormatException ex) {
+                    start(1);
                 }
         }});
 
         stop.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if(clickThread!=null) 
-                    clickThread.interrupt();
-                started = false;
+                stop();
             }
         });
 
@@ -68,18 +70,37 @@ public class AutoClicker {
         frame.setVisible(true);
     }
 
-    private void autoclick() {
+    private void start(double seconds) {
+        if(!started) {
+                    System.out.println(seconds);
+                    clickThread = new Thread(new Runnable() {
+                        public void run() {
+                            autoclick(seconds);
+                        }
+                    });
+                    started = true;
+                    clickThread.start();
+                }
+    }
+
+    private void stop() {
+        if(clickThread!=null) 
+                clickThread.interrupt();
+            started = false;
+    }
+
+    private void autoclick(double seconds) {
         try {
             while(true) {
                 Robot r = new Robot();
                 int button = InputEvent.BUTTON1_DOWN_MASK;
-                System.out.println("*********************");
                 r.mousePress(button);
-                //Thread.sleep(1);
+                Thread.sleep(10);
                 r.mouseRelease(button);
                 Thread.sleep((int)(seconds*1000));
             }
         } catch (Exception e) {
+            System.out.println("*************");
             e.getStackTrace();
         }
     }
