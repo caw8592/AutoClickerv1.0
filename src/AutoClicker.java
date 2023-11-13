@@ -100,7 +100,6 @@ public class AutoClicker {
                 Thread.sleep((int)(seconds*1000));
             }
         } catch (Exception e) {
-            System.out.println("*************");
             e.getStackTrace();
         }
     }
